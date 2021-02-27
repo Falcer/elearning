@@ -12,7 +12,7 @@ import (
 // Service interface
 type Service interface {
 	// Auth
-	GetUsers() ([]*UserWithoutPassword, error)
+	GetUsers() (*[]UserWithoutPassword, error)
 	Login(login Login) (*UserWithoutPassword, error)
 	Register(register Register) (*UserWithoutPassword, error)
 	RefreshToken(refeshToken string) (*UserToken, error)
@@ -23,10 +23,10 @@ type Service interface {
 	DeleteUserRole(userRole UserRoleInput) error
 
 	// Roles
-	GetRoles() ([]*RoleOutput, error)
+	GetRoles() (*[]RoleOutput, error)
 	GetRoleByID(id string) (*RoleOutput, error)
 	AddRole(role RoleInput) (*RoleOutput, error)
-	DeleteRoleByID(is string) error
+	DeleteRoleByID(id string) error
 }
 
 type service struct {
@@ -38,8 +38,8 @@ func NewService(repo Repository) Service {
 	return &service{repo}
 }
 
-func (s *service) GetUsers() ([]*UserWithoutPassword, error) {
-	return nil, nil
+func (s *service) GetUsers() (*[]UserWithoutPassword, error) {
+	return s.repo.GetUsers()
 }
 
 func (s *service) Login(login Login) (*UserWithoutPassword, error) {
@@ -55,23 +55,23 @@ func (s *service) AddUserRole(userRole UserRoleInput) (*UserWithRole, error) {
 }
 
 func (s *service) DeleteUserRole(userRole UserRoleInput) error {
-	return nil
+	return s.repo.DeleteUserRole(userRole)
 }
 
-func (s *service) GetRoles() ([]*RoleOutput, error) {
-	return nil, nil
+func (s *service) GetRoles() (*[]RoleOutput, error) {
+	return s.repo.GetRoles()
 }
 
 func (s *service) GetRoleByID(id string) (*RoleOutput, error) {
-	return nil, nil
+	return s.repo.GetRoleByID(id)
 }
 
 func (s *service) AddRole(role RoleInput) (*RoleOutput, error) {
 	return nil, nil
 }
 
-func (s *service) DeleteRoleByID(is string) error {
-	return nil
+func (s *service) DeleteRoleByID(id string) error {
+	return s.repo.DeleteRoleByID(id)
 }
 
 func (s *service) RefreshToken(refeshToken string) (*UserToken, error) {
