@@ -1,0 +1,26 @@
+### auth health
+GET http://127.0.0.1:8080/auth/health
+
+### login
+POST http://127.0.0.1:8080/auth/login
+Content-Type: application/json
+
+{
+
+}
+
+### register
+POST http://127.0.0.1:8080/auth/register
+Content-Type: application/json
+
+{
+
+}
+
+### refresh
+POST http://127.0.0.1:8080/auth/refresh
+Content-Type: application/json
+
+{
+
+}
