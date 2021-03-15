@@ -2,18 +2,20 @@ package auth
 
 import (
 	"context"
-	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // Repository interface
 type Repository interface {
 	GetUsers() (*[]UserWithoutPassword, error)
-	Login(login Login) (*UserWithPassword, error)
+	Login(email string) (*UserWithPassword, error)
 	Register(register Register) (*string, error)
 
 	// User Role
@@ -27,7 +29,9 @@ type Repository interface {
 	DeleteRoleByID(is string) error
 }
 
-const databaseName = "users"
+var (
+	databaseName string
+)
 
 // repo struct
 type repo struct {
@@ -36,14 +40,27 @@ type repo struct {
 
 // NewRepo user repository
 func NewRepo(url string) Repository {
+	databaseName = os.Getenv("DATABASE_NAME")
+	if databaseName == "" {
+		databaseName = "elearning"
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	clientOptions := options.Client().ApplyURI(url)
-	client, _ := mongo.NewClient(clientOptions)
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		return nil
+	}
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		return nil
+	}
 	return &repo{client: client}
 }
 
 // GetUsers method
 func (r *repo) GetUsers() (*[]UserWithoutPassword, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	cur, err := r.client.Database(databaseName).Collection("users").Find(ctx, bson.D{})
 	if err != nil {
@@ -55,20 +72,25 @@ func (r *repo) GetUsers() (*[]UserWithoutPassword, error) {
 		var result UserWithoutPassword
 		err := cur.Decode(&result)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		users = append(users, result)
 	}
 	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	return &users, nil
 }
 
 // Login method
-func (r *repo) Login(login Login) (*UserWithPassword, error) {
-	return nil, nil
+func (r *repo) Login(email string) (*UserWithPassword, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cur := r.client.Database(databaseName).Collection("users").FindOne(ctx, bson.D{})
+	var user UserWithPassword
+	cur.Decode(&user)
+	return &user, nil
 }
 
 // Register method
@@ -79,8 +101,8 @@ func (r *repo) Register(register Register) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	resID := string(id.InsertedID)
-	return resID, nil
+	resID := id.InsertedID.(primitive.ObjectID).Hex()
+	return &resID, nil
 }
 
 // AddUserRole method

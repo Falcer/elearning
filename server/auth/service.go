@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -13,8 +14,8 @@ import (
 type Service interface {
 	// Auth
 	GetUsers() (*[]UserWithoutPassword, error)
-	Login(login Login) (*UserWithoutPassword, error)
-	Register(register Register) (*UserWithoutPassword, error)
+	Login(login Login) (*UserToken, error)
+	Register(register Register) (*UserToken, error)
 	RefreshToken(refeshToken string) (*UserToken, error)
 	Verify(tokenString string) error
 
@@ -42,12 +43,36 @@ func (s *service) GetUsers() (*[]UserWithoutPassword, error) {
 	return s.repo.GetUsers()
 }
 
-func (s *service) Login(login Login) (*UserWithoutPassword, error) {
-	return nil, nil
+func (s *service) Login(login Login) (*UserToken, error) {
+	res, err := s.repo.Login(login.Email)
+	if err != nil {
+		return nil, err
+	}
+	if !compareHash(res.Password, login.Password) {
+		return nil, errors.New("email or password incorrect")
+	}
+	token, err := createToken(res.ID)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
-func (s *service) Register(register Register) (*UserWithoutPassword, error) {
-	return nil, nil
+func (s *service) Register(register Register) (*UserToken, error) {
+	hash, err := createHash(register.Password)
+	if err != nil {
+		return nil, err
+	}
+	register.Password = *hash
+	res, err := s.repo.Register(register)
+	if err != nil {
+		return nil, err
+	}
+	token, err := createToken(*res)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 func (s *service) AddUserRole(userRole UserRoleInput) (*UserWithRole, error) {
@@ -78,16 +103,15 @@ func (s *service) RefreshToken(refeshToken string) (*UserToken, error) {
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(refeshToken, claims, func(token *jwt.Token) (interface{}, error) {
 		if jwt.GetSigningMethod("HS256") != token.Method {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
-
 	if err != nil {
-		return nil, fmt.Errorf("Error : %s", err)
+		return nil, fmt.Errorf("error : %s", err)
 	}
 	if !token.Valid {
-		return nil, fmt.Errorf("Token not valid")
+		return nil, fmt.Errorf("token not valid")
 	}
 	newToken, err := createToken(claims["id"].(string))
 	return newToken, err
@@ -96,15 +120,15 @@ func (s *service) RefreshToken(refeshToken string) (*UserToken, error) {
 func (s *service) Verify(tokenString string) error {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if jwt.GetSigningMethod("HS256") != token.Method {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil {
-		return fmt.Errorf("Error : %s", err)
+		return fmt.Errorf("error : %s", err)
 	}
 	if !token.Valid {
-		return fmt.Errorf("Token not valid")
+		return fmt.Errorf("token not valid")
 	}
 	return nil
 }
