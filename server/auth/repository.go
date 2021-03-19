@@ -19,14 +19,14 @@ type Repository interface {
 	Register(register Register) (*string, error)
 
 	// User Role
-	AddUserRole(userRole UserRoleInput) error
+	AddUserRole(userRole UserRoleInput) (*UserWithRole, error)
 	DeleteUserRole(userRole UserRoleInput) error
 
 	// Roles
 	GetRoles() (*[]RoleOutput, error)
 	GetRoleByID(id string) (*RoleOutput, error)
-	AddRole(role RoleInput) error
-	DeleteRoleByID(is string) error
+	AddRole(role RoleInput) (*RoleOutput, error)
+	DeleteRoleByID(id string) error
 }
 
 var (
@@ -106,8 +106,8 @@ func (r *repo) Register(register Register) (*string, error) {
 }
 
 // AddUserRole method
-func (r *repo) AddUserRole(userRole UserRoleInput) error {
-	return nil
+func (r *repo) AddUserRole(userRole UserRoleInput) (*UserWithRole, error) {
+	return nil, nil
 }
 
 // DeleteUserRole method
@@ -117,20 +117,65 @@ func (r *repo) DeleteUserRole(userRole UserRoleInput) error {
 
 // GetRoles method
 func (r *repo) GetRoles() (*[]RoleOutput, error) {
-	return nil, nil
+	var roles []RoleOutput
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	res, err := r.client.Database(databaseName).Collection("users").Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	for res.Next(ctx) {
+		var role RoleOutput
+		_ = res.Decode(&role)
+		roles = append(roles, role)
+	}
+	if err = res.Err(); err != nil {
+		return nil, err
+	}
+	return &roles, nil
 }
 
 // GetRoleByID method
 func (r *repo) GetRoleByID(id string) (*RoleOutput, error) {
-	return nil, nil
+	var role RoleOutput
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err := r.client.Database(databaseName).Collection("roles").FindOne(ctx, RoleOutput{ID: id}).Decode(&role)
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
 }
 
 // AddRole method
-func (r *repo) AddRole(role RoleInput) error {
-	return nil
+func (r *repo) AddRole(role RoleInput) (*RoleOutput, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	id, err := r.client.Database(databaseName).Collection("roles").InsertOne(ctx, role)
+	if err != nil {
+		return nil, err
+	}
+	resID := id.InsertedID.(primitive.ObjectID).Hex()
+	return &RoleOutput{
+		ID:          resID,
+		Name:        role.Name,
+		Description: role.Description,
+	}, nil
 }
 
 // DeleteRoleByID method
-func (r *repo) DeleteRoleByID(is string) error {
+func (r *repo) DeleteRoleByID(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.client.Database(databaseName).Collection("roles").DeleteOne(ctx, bson.M{
+		"id": objectID,
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }

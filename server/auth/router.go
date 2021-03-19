@@ -96,13 +96,27 @@ func NewRouter(app *fiber.App) *fiber.App {
 
 	// Role
 	app.Get("/role", func(c *fiber.Ctx) error {
+		res, err := s.GetRoles()
+		if err != nil {
+			return c.Status(500).JSON(&fiber.Map{
+				"message": fmt.Sprintf("Something wrong : %s", err.Error()),
+			})
+		}
 		return c.Status(200).JSON(&fiber.Map{
 			"message": "Roles is running 🔥",
+			"data":    *res,
 		})
 	})
 	app.Get("/role/:id", func(c *fiber.Ctx) error {
+		res, err := s.GetRoleByID(c.Params("id"))
+		if err != nil {
+			return c.Status(500).JSON(&fiber.Map{
+				"message": fmt.Sprintf("Something wrong : %s", err.Error()),
+			})
+		}
 		return c.Status(200).JSON(&fiber.Map{
 			"message": fmt.Sprintf("Role is running 🔥, id : %s", c.Params("id")),
+			"data":    *res,
 		})
 	})
 	app.Post("/role", func(c *fiber.Ctx) error {
@@ -110,12 +124,24 @@ func NewRouter(app *fiber.App) *fiber.App {
 		if err := c.BodyParser(role); err != nil {
 			return err
 		}
+		res, err := s.AddRole(*role)
+		if err != nil {
+			return c.Status(500).JSON(&fiber.Map{
+				"message": fmt.Sprintf("Something wrong : %s", err.Error()),
+			})
+		}
 		return c.Status(200).JSON(&fiber.Map{
 			"message": "Role added is running 🔥",
-			"data":    &role,
+			"data":    *res,
 		})
 	})
 	app.Delete("/role/:id", func(c *fiber.Ctx) error {
+		err := s.DeleteRoleByID(c.Params("id"))
+		if err != nil {
+			return c.Status(500).JSON(&fiber.Map{
+				"message": fmt.Sprintf("Something wrong : %s", err.Error()),
+			})
+		}
 		return c.Status(200).JSON(&fiber.Map{
 			"message": fmt.Sprintf("Role is running 🔥, deleted id : %s", c.Params("id")),
 		})

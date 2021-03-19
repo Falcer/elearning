@@ -92,7 +92,7 @@ func (s *service) GetRoleByID(id string) (*RoleOutput, error) {
 }
 
 func (s *service) AddRole(role RoleInput) (*RoleOutput, error) {
-	return nil, nil
+	return s.repo.AddRole(role)
 }
 
 func (s *service) DeleteRoleByID(id string) error {
