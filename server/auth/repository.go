@@ -120,7 +120,7 @@ func (r *repo) GetRoles() (*[]RoleOutput, error) {
 	var roles []RoleOutput
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	res, err := r.client.Database(databaseName).Collection("users").Find(ctx, bson.M{})
+	res, err := r.client.Database(databaseName).Collection("roles").Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}

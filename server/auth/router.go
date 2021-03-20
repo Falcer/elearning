@@ -103,7 +103,7 @@ func NewRouter(app *fiber.App) *fiber.App {
 			})
 		}
 		return c.Status(200).JSON(&fiber.Map{
-			"message": "Roles is running 🔥",
+			"message": "Get all Role",
 			"data":    *res,
 		})
 	})
@@ -115,7 +115,7 @@ func NewRouter(app *fiber.App) *fiber.App {
 			})
 		}
 		return c.Status(200).JSON(&fiber.Map{
-			"message": fmt.Sprintf("Role is running 🔥, id : %s", c.Params("id")),
+			"message": fmt.Sprintf("Role id : %s", c.Params("id")),
 			"data":    *res,
 		})
 	})
@@ -131,7 +131,7 @@ func NewRouter(app *fiber.App) *fiber.App {
 			})
 		}
 		return c.Status(200).JSON(&fiber.Map{
-			"message": "Role added is running 🔥",
+			"message": "Role created",
 			"data":    *res,
 		})
 	})
@@ -143,7 +143,7 @@ func NewRouter(app *fiber.App) *fiber.App {
 			})
 		}
 		return c.Status(200).JSON(&fiber.Map{
-			"message": fmt.Sprintf("Role is running 🔥, deleted id : %s", c.Params("id")),
+			"message": fmt.Sprintf("Role id : %s deleted", c.Params("id")),
 		})
 	})
 	return app
