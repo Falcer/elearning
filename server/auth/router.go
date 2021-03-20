@@ -135,6 +135,22 @@ func NewRouter(app *fiber.App) *fiber.App {
 			"data":    *res,
 		})
 	})
+	app.Put("/role", func(c *fiber.Ctx) error {
+		role := new(RoleOutput)
+		if err := c.BodyParser(role); err != nil {
+			return err
+		}
+		res, err := s.UpdateRole(*role)
+		if err != nil {
+			return c.Status(500).JSON(&fiber.Map{
+				"message": fmt.Sprintf("Something wrong : %s", err.Error()),
+			})
+		}
+		return c.Status(200).JSON(&fiber.Map{
+			"message": "Role updated",
+			"data":    *res,
+		})
+	})
 	app.Delete("/role/:id", func(c *fiber.Ctx) error {
 		err := s.DeleteRoleByID(c.Params("id"))
 		if err != nil {

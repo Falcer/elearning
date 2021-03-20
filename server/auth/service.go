@@ -27,6 +27,7 @@ type Service interface {
 	GetRoles() (*[]RoleOutput, error)
 	GetRoleByID(id string) (*RoleOutput, error)
 	AddRole(role RoleInput) (*RoleOutput, error)
+	UpdateRole(role RoleOutput) (*RoleOutput, error)
 	DeleteRoleByID(id string) error
 }
 
@@ -93,6 +94,10 @@ func (s *service) GetRoleByID(id string) (*RoleOutput, error) {
 
 func (s *service) AddRole(role RoleInput) (*RoleOutput, error) {
 	return s.repo.AddRole(role)
+}
+
+func (s *service) UpdateRole(role RoleOutput) (*RoleOutput, error) {
+	return s.repo.UpdateRole(role)
 }
 
 func (s *service) DeleteRoleByID(id string) error {

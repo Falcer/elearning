@@ -16,7 +16,7 @@ type Login struct {
 
 // UserWithoutPassword model
 type UserWithoutPassword struct {
-	ID           string `json:"id"`
+	ID           string `json:"id" bson:"_id,omitempty"`
 	Email        string `json:"email"`
 	FullName     string `json:"fullname"`
 	ImageProfile string `json:"image_profile"`
@@ -24,7 +24,7 @@ type UserWithoutPassword struct {
 
 // UserWithPassword model
 type UserWithPassword struct {
-	ID           string `json:"id"`
+	ID           string `json:"id" bson:"_id,omitempty"`
 	Email        string `json:"email"`
 	FullName     string `json:"fullname"`
 	Password     string `json:"password"`
@@ -39,14 +39,14 @@ type RoleInput struct {
 
 // RoleOutput model
 type RoleOutput struct {
-	ID          string  `json:"id"`
+	ID          string  `json:"id" bson:"_id,omitempty"`
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
 }
 
 // UserWithRole model
 type UserWithRole struct {
-	ID           string       `json:"id"`
+	ID           string       `json:"id" bson:"_id,omitempty"`
 	Email        string       `json:"email"`
 	FullName     string       `json:"fullname"`
 	ImageProfile string       `json:"image_profile"`

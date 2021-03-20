@@ -26,6 +26,7 @@ type Repository interface {
 	GetRoles() (*[]RoleOutput, error)
 	GetRoleByID(id string) (*RoleOutput, error)
 	AddRole(role RoleInput) (*RoleOutput, error)
+	UpdateRole(role RoleOutput) (*RoleOutput, error)
 	DeleteRoleByID(id string) error
 }
 
@@ -140,7 +141,11 @@ func (r *repo) GetRoleByID(id string) (*RoleOutput, error) {
 	var role RoleOutput
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := r.client.Database(databaseName).Collection("roles").FindOne(ctx, RoleOutput{ID: id}).Decode(&role)
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	err = r.client.Database(databaseName).Collection("roles").FindOne(ctx, bson.M{"_id": _id}).Decode(&role)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +166,21 @@ func (r *repo) AddRole(role RoleInput) (*RoleOutput, error) {
 		Name:        role.Name,
 		Description: role.Description,
 	}, nil
+}
+
+func (r *repo) UpdateRole(role RoleOutput) (*RoleOutput, error) {
+	var res RoleOutput
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_id, err := primitive.ObjectIDFromHex(role.ID)
+	if err != nil {
+		return nil, err
+	}
+	err = r.client.Database(databaseName).Collection("roles").FindOneAndUpdate(ctx, bson.M{"_id": _id}, role).Decode(&res)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 // DeleteRoleByID method

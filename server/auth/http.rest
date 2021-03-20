@@ -43,7 +43,7 @@ Content-Type: application/json
 GET http://127.0.0.1:8080/role
 
 ### Role by id
-GET http://127.0.0.1:8080/role/1
+GET http://127.0.0.1:8080/role/605555e3a5e7bdad2ad66b2d
 
 ### Role add
 POST http://127.0.0.1:8080/role
